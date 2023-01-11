@@ -29,3 +29,5 @@ require (
 	golang.org/x/tools v0.1.12 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
+
+replace github.com/techknowlogick/certmagic-s3 =>  github.com/thekonqueror/certmagic-s3
