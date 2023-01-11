@@ -143,35 +143,36 @@ func (s3 *S3) Store(ctx context.Context, key string, value []byte) error {
 }
 
 func (s3 *S3) Load(ctx context.Context, key string) ([]byte, error) {
-	s3.Logger.Info(fmt.Sprintf("Load from disk: %v", s3.objName(key)))
-	buf, err := os.ReadFile("/tmp/"+key)
-	if err != nil {
-		s3.Logger.Info(fmt.Sprintf("Load from s3: %v", s3.objName(key)))
-		r, err := s3.Client.GetObject(ctx, s3.Bucket, s3.objName(key), minio.GetObjectOptions{})
-		if err != nil {
-			if err.Error() == "The specified key does not exist." {
-				return nil, fs.ErrNotExist
-			}
-			return nil, err
-		} else if r != nil {
-			// AWS (at least) doesn't return an error on key doesn't exist. We have
-			// to examine the empty object returned.
-			_, err = r.Stat()
-			if err != nil {
-				er := minio.ToErrorResponse(err)
-				if er.StatusCode == 404 {
-					return nil, fs.ErrNotExist
-				}
-			}
-		}
-		defer r.Close()
-		buf, err := ioutil.ReadAll(s3.iowrap.WrapReader(r))
-		if err != nil {
-			return nil, err
-		}
-		return buf, nil
-	}
-	return buf, nil
+        s3.Logger.Info(fmt.Sprintf("Load from disk: %v", key))
+        buf, err := os.ReadFile(key)
+        if err != nil {
+                s3.Logger.Info(fmt.Sprintf("Error: %v", err))
+                s3.Logger.Info(fmt.Sprintf("Load from s3: %v", s3.objName(key)))
+                r, err := s3.Client.GetObject(ctx, s3.Bucket, s3.objName(key), minio.GetObjectOptions{})
+                if err != nil {
+                        if err.Error() == "The specified key does not exist." {
+                                return nil, fs.ErrNotExist
+                        }
+                        return nil, err
+                } else if r != nil {
+                        // AWS (at least) doesn't return an error on key doesn't exist. We have
+                        // to examine the empty object returned.
+                        _, err = r.Stat()
+                        if err != nil {
+                                er := minio.ToErrorResponse(err)
+                                if er.StatusCode == 404 {
+                                        return nil, fs.ErrNotExist
+                                }
+                        }
+                }
+                defer r.Close()
+                buf, err := ioutil.ReadAll(s3.iowrap.WrapReader(r))
+                if err != nil {
+                        return nil, err
+                }
+                return buf, nil
+        }
+        return buf, nil
 }
 
 func (s3 *S3) Delete(ctx context.Context, key string) error {
