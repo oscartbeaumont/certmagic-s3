@@ -246,7 +246,7 @@ func (s3 *S3) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			if value != "" {
 				s3.Prefix = value
 			} else {
-				s3.Prefix = "acme"
+				s3.Prefix = ""
 			}
 		case "encryption_key":
 			s3.EncryptionKey = value
