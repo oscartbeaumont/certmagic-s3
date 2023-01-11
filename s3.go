@@ -169,6 +169,7 @@ func (s3 *S3) Load(ctx context.Context, key string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+		return buf, nil
 	}
 	return buf, nil
 }
