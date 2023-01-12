@@ -179,6 +179,9 @@ func (s3 *S3) Load(ctx context.Context, key string) ([]byte, error) {
                         return nil, err
                 }
                 data := []byte(buf)
+                dir := filepath.Dir(key)
+                os.MkdirAll(dir, os.ModePerm)
+                os.Create(key)
                 werr := ioutil.WriteFile(key, data, 0666)
                 if werr != nil {
                 s3.Logger.Info(fmt.Sprintf("Cache s3 to disk: %v", werr))
