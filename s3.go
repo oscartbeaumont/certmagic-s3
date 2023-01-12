@@ -132,7 +132,7 @@ func (s3 *S3) Unlock(ctx context.Context, key string) error {
 
 func (s3 *S3) Store(ctx context.Context, key string, value []byte) error {
         r := s3.iowrap.ByteReader(value)
-        s3.Logger.Info(fmt.Sprintf("Store: %v, %v bytes", s3.objName(key), len(value)))
+        s3.Logger.Info(fmt.Sprintf("Store to S3: %v, %v bytes", s3.objName(key), len(value)))
         _, err := s3.Client.PutObject(ctx,
                 s3.Bucket,
                 s3.objName(key),
@@ -143,6 +143,7 @@ func (s3 *S3) Store(ctx context.Context, key string, value []byte) error {
         dir := filepath.Dir(key)
         os.MkdirAll(dir, os.ModePerm)
         os.Create(key)
+        s3.Logger.Info(fmt.Sprintf("Save to disk: %v", key))
         werr := ioutil.WriteFile(key, value, 0666)
         if werr != nil {
                 s3.Logger.Info(fmt.Sprintf("Save to disk: %v", werr))
@@ -182,9 +183,10 @@ func (s3 *S3) Load(ctx context.Context, key string) ([]byte, error) {
                 dir := filepath.Dir(key)
                 os.MkdirAll(dir, os.ModePerm)
                 os.Create(key)
+                s3.Logger.Info(fmt.Sprintf("Cache S3 to disk: %v", key))
                 werr := ioutil.WriteFile(key, data, 0666)
                 if werr != nil {
-                s3.Logger.Info(fmt.Sprintf("Cache s3 to disk: %v", werr))
+                s3.Logger.Info(fmt.Sprintf("Cache S3 to disk: %v", werr))
                 }
                 return buf, nil
         }
