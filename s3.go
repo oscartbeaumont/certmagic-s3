@@ -40,21 +40,7 @@ func init() {
 	caddy.RegisterModule(new(S3))
 }
 
-func (s3 *S3) Provision(context caddy.Context) error {
-	s3.Logger = context.Logger(s3)
-
-	// S3 Client
-	client, err := minio.New(s3.Host, &minio.Options{
-		Creds:  credentials.NewStaticV4(s3.AccessKey, s3.SecretKey, ""),
-		Secure: true,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	s3.Client = client
-
+func (s3 *S3) Initialise() error {
 	if len(s3.EncryptionKey) == 0 {
 		s3.Logger.Info("Clear text certificate storage active")
 		s3.iowrap = &CleartextIO{}
