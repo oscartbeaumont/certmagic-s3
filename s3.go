@@ -71,6 +71,37 @@ func (s3 *S3) Provision(context caddy.Context) error {
 	return nil
 }
 
+func (s3 *S3) Provision(context caddy.Context) error {
+	s3.Logger = context.Logger(s3)
+
+	// S3 Client
+	client, err := minio.New(s3.Host, &minio.Options{
+		Creds:  credentials.NewStaticV4(s3.AccessKey, s3.SecretKey, ""),
+		Secure: true,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	s3.Client = client
+
+	if len(s3.EncryptionKey) == 0 {
+		s3.Logger.Info("Clear text certificate storage active")
+		s3.iowrap = &CleartextIO{}
+	} else if len(s3.EncryptionKey) != 32 {
+		s3.Logger.Error("encryption key must have exactly 32 bytes")
+		return errors.New("encryption key must have exactly 32 bytes")
+	} else {
+		s3.Logger.Info("Encrypted certificate storage active")
+		sb := &SecretBoxIO{}
+		copy(sb.SecretKey[:], []byte(s3.EncryptionKey))
+		s3.iowrap = sb
+	}
+
+	return nil
+}
+
 func (s3 *S3) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
 		ID: "caddy.storage.s3",
